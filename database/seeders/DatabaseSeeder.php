@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Bank;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Http;
@@ -23,7 +23,18 @@ class DatabaseSeeder extends Seeder
     {
         try {
             $response = Http::get('https://api.vietqr.io/v2/banks');
-            dd($response->json()['data']);
+            $data = $response->json()['data'];
+            foreach ($data as $bank) {
+                Bank::insert([
+                    'name' => $bank['name'],
+                    'code' => $bank['code'],
+                    'bin' => $bank['bin'],
+                    'logo' => $bank['logo'],
+                    'short_name' => $bank['short_name'],
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
         } catch (\Exception $e) {
         }
     }

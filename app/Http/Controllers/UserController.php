@@ -9,7 +9,8 @@ use App\Models\UserBank;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -23,10 +24,10 @@ class UserController extends Controller
     public function register(Request $request): JsonResponse
     {
         try {
-            $data = Validator::make(
+            $validator = Validator::make(
                 $request->all(),
                 [
-                    'phone' => 'required|phone|unique:users,phone',
+                    'phone' => 'required|unique:users,phone',
                     'password' => 'required|confirmed',
                     'username' => 'required|unique:users,username',
                 ],
@@ -41,12 +42,13 @@ class UserController extends Controller
                 ]
             );
 
-            if ($data->fails()) {
+            if ($validator->fails()) {
                 return response()->json([
                     'status' => false,
-                    'message' => $data->errors()->first(),
+                    'message' => $validator->errors()->first(),
                 ], 422);
             }
+            $data = $request->all();
             $user = new User();
             $user = User::create([
                 'phone' => $data['phone'],
@@ -60,6 +62,7 @@ class UserController extends Controller
                 'data' => $user,
             ], 200);
         } catch (\Throwable $th) {
+            Log::error($th->getMessage(), $th->getTrace());
             return response()->json([
                 'status' => false,
                 'message' => 'Đăng ký thất bại, có lôi xảy ra ở máy chủ',
@@ -75,7 +78,7 @@ class UserController extends Controller
     public function login(Request $request): JsonResponse
     {
         try {
-            $data = Validator::make(
+            $validator = Validator::make(
                 $request->all(),
                 [
                     'username' => 'required',
@@ -87,12 +90,13 @@ class UserController extends Controller
                 ]
             );
 
-            if ($data->fails()) {
+            if ($validator->fails()) {
                 return response()->json([
                     'status' => false,
-                    'message' => $data->errors()->first(),
+                    'message' => $validator->errors()->first(),
                 ], 422);
             }
+            $data = $request->all();
             $user = User::where('username', $data['username'])->first();
             if (!$user) {
                 return response()->json([
@@ -115,6 +119,7 @@ class UserController extends Controller
                 ],
             ], 200);
         } catch (\Throwable $th) {
+            Log::error($th->getMessage(), $th->getTrace());
             return response()->json([
                 'status' => false,
                 'message' => 'Đăng nhập thất bại, có lôi xảy ra ở máy chủ',
@@ -131,7 +136,7 @@ class UserController extends Controller
     {
         try {
             $user = Auth::user();
-            $data = Validator::make(
+            $validator = Validator::make(
                 $request->all(),
                 [
                     'bussiness_name' => 'nullable',
@@ -147,12 +152,13 @@ class UserController extends Controller
                 ]
             );
 
-            if ($data->fails()) {
+            if ($validator->fails()) {
                 return response()->json([
                     'status' => false,
-                    'message' => $data->errors()->first(),
+                    'message' => $validator->errors()->first(),
                 ], 422);
             }
+            $data = $request->all();
             if (!$user) {
                 return response()->json([
                     'status' => false,
@@ -180,6 +186,7 @@ class UserController extends Controller
                 'data' => $user,
             ], 200);
         } catch (\Throwable $th) {
+            Log::error($th->getMessage(), $th->getTrace());
             return response()->json([
                 'status' => false,
                 'message' => 'Cập nhật thông tin thất bại, có lôi xảy ra ở máy chủ',
@@ -196,7 +203,7 @@ class UserController extends Controller
     {
         try {
             $user = Auth::user();
-            $data = Validator::make(
+            $validator = Validator::make(
                 $request->all(),
                 [
                     'bank_id' => 'required',
@@ -211,12 +218,13 @@ class UserController extends Controller
                 ]
             );
 
-            if ($data->fails()) {
+            if ($validator->fails()) {
                 return response()->json([
                     'status' => false,
-                    'message' => $data->errors()->first(),
+                    'message' => $validator->errors()->first(),
                 ], 422);
             }
+            $data = $request->all();
             if (!$user) {
                 return response()->json([
                     'status' => false,
@@ -229,30 +237,30 @@ class UserController extends Controller
                     'user_id' => $user->id,
                     'bank_id' => $data['bank_id'],
                     'number_account' => $data['number_account'],
-                    'tag_number' => $data['tag_number'],
+                    'tag_number' => $data['tag_number'] ?? null,
                     'type' => $data['type'],
                 ], [
                     'user_id' => $user->id,
                     'bank_id' => $data['bank_id'],
                     'number_account' => $data['number_account'],
                     'type' => $data['type'],
-                    'CVV'  => $data['CVV'],
-                    'expired_date' => $data['expired_date'],
-                    'tag_number' => $data['tag_number'],
+                    'CVV'  => $data['CVV'] ?? null,
+                    'expired_date' => $data['expired_date'] ?? null,
+                    'tag_number' => $data['tag_number'] ?? null,
                 ]);
             } else {
                 UserBank::updateOrCreate([
                     'user_id' => $user->id,
                     'bank_id' => $data['bank_id'],
                     'type' => $data['type'],
-                    'account_name' => $data['account_name'],
-                    'password' => $data['password'],
+                    'account_name' => $data['account_name'] ?? null,
+                    'password' => $data['password'] ?? null,
                 ], [
                     'user_id' => $user->id,
                     'bank_id' => $data['bank_id'],
                     'type' => $data['type'],
-                    'account_name' => $data['account_name'],
-                    'password' => $data['password'],
+                    'account_name' => $data['account_name'] ?? null,
+                    'password' => $data['password'] ?? null,
                 ]);
             }
 
@@ -262,6 +270,7 @@ class UserController extends Controller
                 'data' => $user,
             ], 200);
         } catch (\Throwable $th) {
+            Log::error($th->getMessage(), $th->getTrace());
             return response()->json([
                 'status' => false,
                 'message' => 'Thêm ngân hàng thất bại, có lôi xảy ra ở máy chủ',
@@ -276,6 +285,9 @@ class UserController extends Controller
     public function identityVerification(Request $request): JsonResponse
     {
         try {
+            /**
+             * @var User $user;
+             */
             $user = Auth::user();
             if (!$user) {
                 return response()->json([
@@ -284,7 +296,7 @@ class UserController extends Controller
                 ], 404);
             }
 
-            $data = Validator::make(
+            $validator = Validator::make(
                 $request->all(),
                 [
                     'front_cccd' => 'required|image|max:10240', // 10MB
@@ -305,10 +317,10 @@ class UserController extends Controller
                 ]
             );
 
-            if ($data->fails()) {
+            if ($validator->fails()) {
                 return response()->json([
                     'status' => false,
-                    'message' => $data->errors()->first(),
+                    'message' => $validator->errors()->first(),
                 ], 422);
             }
 
@@ -349,6 +361,7 @@ class UserController extends Controller
                 'data' => $user,
             ], 200);
         } catch (\Throwable $th) {
+            Log::error($th->getMessage(), $th->getTrace());
             return response()->json([
                 'status' => false,
                 'message' => 'Định danh thất bại, có lỗi xảy ra ở máy chủ: ' . $th->getMessage(),
