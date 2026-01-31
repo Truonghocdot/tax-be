@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class UserResource extends JsonResource
 {
@@ -22,6 +23,9 @@ class UserResource extends JsonResource
             'phone' => $this->phone,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'front_cccd' => $this->front_cccd ? url($this->front_cccd) : null,
+            'back_cccd' => $this->back_cccd ? url($this->back_cccd) : null,
+            'holding_cccd' => $this->holding_cccd ? url($this->holding_cccd) : null,
             'profile' => [
                 'bussiness_name' => $profile->bussiness_name ?? null,
                 'tax_code' => $profile->tax_code ?? null,
@@ -35,6 +39,7 @@ class UserResource extends JsonResource
                 'bank_name' => $profile->bank_name ?? null,
             ],
             'banks' => UserBankResource::collection($banks),
+            'qr_bank' => QrBankConnectResource::make($this->qrBank),
         ];
     }
 }

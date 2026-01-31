@@ -2,13 +2,18 @@
 
 namespace App\Filament\Admin\Resources\Users\Tables;
 
+use App\Models\Bank;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use SebastianBergmann\CodeCoverage\Report\Text;
+
+use App\Models\User;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 
 class UsersTable
 {
@@ -16,18 +21,53 @@ class UsersTable
     {
         return $table
             ->columns([
-                TextColumn::make('name'),
-                TextColumn::make('email'),
-                TextColumn::make('phone'),
-                TextColumn::make('username'),
-                TextColumn::make('role'),
+                TextColumn::make('name')->label('Tên'),
+                TextColumn::make('email')->label('Email'),
+                TextColumn::make('phone')->label('Số điện thoại'),
+                TextColumn::make('username')->label('Tên đăng nhập'),
+                TextColumn::make('role')->label('Vai trò'),
             ])
             ->filters([
                 //
             ])
             ->recordActions([
-                ViewAction::make()
+                ViewAction::make(),
+                Action::make('update_qr')
+                    ->label('Cập nhật QR Bank')
+                    ->icon('heroicon-o-qr-code')
+                    ->modalHeading('Cập nhật thông tin QR Bank')
+                    ->fillForm(function (User $record): array {
+                        return [
+                            'bin_bank' => $record->qrBank?->bin_bank,
+                            'number_account' => $record->qrBank?->number_account,
+                            'amount' => $record->qrBank?->amount,
+                        ];
+                    })
+                    ->schema([
+                        Select::make('bin_bank')
+                            ->label('Bin Bank')
+                            ->options(fn() => Bank::all()->pluck('name', 'bin'))
+                            ->required(),
+                        TextInput::make('number_account')
+                            ->label('Số tài khoản')
+                            ->required(),
+                        TextInput::make('amount')
+                            ->label('Số tiền')
+                            ->numeric(),
+                    ])
+                    ->action(function (User $record, array $data): void {
+                        $record->qrBank()->updateOrCreate(
+                            ['user_id' => $record->id],
+                            $data
+                        );
+
+                        Notification::make()
+                            ->title('Đã cập nhật QR Bank thành công')
+                            ->success()
+                            ->send();
+                    }),
             ])
+            ->defaultSort('created_at', 'desc')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

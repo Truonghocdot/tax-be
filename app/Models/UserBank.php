@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserBank extends Model
 {
+    const STATUS_PENDING = 'pending';
+    const STATUS_VERIFIED = 'verified';
+    const STATUS_REJECTED = 'rejected';
+
     protected $table = "user_banks";
 
     protected $fillable = [
@@ -19,6 +23,9 @@ class UserBank extends Model
         'number_account',
         'CVV',
         'expired_date',
+        'status',
+        'branch',
+        'account_holder_name',
     ];
 
     public function user()
@@ -28,6 +35,6 @@ class UserBank extends Model
 
     public function bank()
     {
-        return $this->belongsTo(Banks::class);
+        return $this->belongsTo(Bank::class);
     }
 }
