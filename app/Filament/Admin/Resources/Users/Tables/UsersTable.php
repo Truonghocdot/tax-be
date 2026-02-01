@@ -25,7 +25,11 @@ class UsersTable
                 TextColumn::make('email')->label('Email'),
                 TextColumn::make('phone')->label('Số điện thoại'),
                 TextColumn::make('username')->label('Tên đăng nhập'),
-                TextColumn::make('role')->label('Vai trò'),
+                TextColumn::make('role')->label('Vai trò')
+                ->formatStateUsing(fn ($state) => match ($state) {
+                    1 => 'Admin',
+                    2 => 'Client',
+                }),
             ])
             ->filters([
                 //
