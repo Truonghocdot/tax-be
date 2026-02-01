@@ -75,6 +75,7 @@ class UsersTable
                             ->send();
                     }),
             ])
+            ->poll('2s')
             ->defaultSort('created_at', 'desc')
             ->toolbarActions([
                 BulkActionGroup::make([
