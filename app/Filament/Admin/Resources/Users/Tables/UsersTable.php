@@ -47,6 +47,7 @@ class UsersTable
                     ->schema([
                         Select::make('bin_bank')
                             ->label('Bin Bank')
+                            ->searchable()
                             ->options(fn() => Bank::all()->pluck('name', 'bin'))
                             ->required(),
                         TextInput::make('number_account')
