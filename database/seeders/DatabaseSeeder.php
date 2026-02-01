@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Bank;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Http;
@@ -17,6 +18,16 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->seedBank();
+    }
+
+    public function seedAdmin(): void
+    {
+        User::create([
+            'name' => 'Admin',
+            'email' => 'admin@admin.com',
+            'password' => bcrypt('password'),
+            'role' => 1,
+        ]);
     }
 
     private function seedBank(): void
