@@ -9,6 +9,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::post('/login', [App\Http\Controllers\UserController::class, 'login']);
+Route::post('/logout', [App\Http\Controllers\UserController::class, 'logout']);
 Route::post('/register', [App\Http\Controllers\UserController::class, 'register']);
 
 Route::get('banks', [CommonController::class, 'banks']);

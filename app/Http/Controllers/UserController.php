@@ -392,4 +392,21 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+    public function logout(Request $request): JsonResponse
+    {
+        try {
+            $request->user()->currentAccessToken()->delete();
+            return response()->json([
+                'status' => true,
+                'message' => 'Đăng xuất thành công',
+            ], 200);
+        } catch (\Throwable $th) {
+            Log::error($th->getMessage(), $th->getTrace());
+            return response()->json([
+                'status' => false,
+                'message' => 'Đăng xuất thất bại, có lỗi xảy ra ở máy chủ: ' . $th->getMessage(),
+            ], 500);
+        }
+    }
 }
