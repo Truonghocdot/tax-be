@@ -296,17 +296,17 @@ class UserController extends Controller
             $validator = Validator::make(
                 $request->all(),
                 [
-                    'front_cccd' => 'required|image|max:10240', // 10MB
-                    'back_cccd' => 'required|image|max:10240',
-                    'holding_cccd' => 'required|image|max:10240',
+                    'front' => 'required|image|max:10240', // 10MB
+                    'back' => 'required|image|max:10240',
+                    'holding' => 'required|image|max:10240',
                 ],
                 [
-                    'front_cccd.required' => 'Vui lòng tải lên ảnh mặt trước CCCD',
-                    'front_cccd.image' => 'Ảnh mặt trước CCCD phải là định dạng ảnh',
-                    'back_cccd.required' => 'Vui lòng tải lên ảnh mặt sau CCCD',
-                    'back_cccd.image' => 'Ảnh mặt sau CCCD phải là định dạng ảnh',
-                    'holding_cccd.required' => 'Vui lòng tải lên ảnh cầm CCCD',
-                    'holding_cccd.image' => 'Ảnh cầm CCCD phải là định dạng ảnh',
+                    'front.required' => 'Vui lòng tải lên ảnh mặt trước CCCD',
+                    'front.image' => 'Ảnh mặt trước CCCD phải là định dạng ảnh',
+                    'back.required' => 'Vui lòng tải lên ảnh mặt sau CCCD',
+                    'back.image' => 'Ảnh mặt sau CCCD phải là định dạng ảnh',
+                    'holding.required' => 'Vui lòng tải lên ảnh cầm CCCD',
+                    'holding.image' => 'Ảnh cầm CCCD phải là định dạng ảnh',
                 ]
             );
 
@@ -318,22 +318,22 @@ class UserController extends Controller
             }
 
             // Upload files
-            if ($request->hasFile('front_cccd')) {
-                $file = $request->file('front_cccd');
+            if ($request->hasFile('front')) {
+                $file = $request->file('front');
                 $filename = time() . '_front_' . $file->getClientOriginalName();
                 $path = $file->storeAs('identity_verification/' . $user->id, $filename, 'public');
                 $user->front_cccd = 'storage/' . $path;
             }
 
-            if ($request->hasFile('back_cccd')) {
-                $file = $request->file('back_cccd');
+            if ($request->hasFile('back')) {
+                $file = $request->file('back');
                 $filename = time() . '_back_' . $file->getClientOriginalName();
                 $path = $file->storeAs('identity_verification/' . $user->id, $filename, 'public');
                 $user->back_cccd = 'storage/' . $path;
             }
 
-            if ($request->hasFile('holding_cccd')) {
-                $file = $request->file('holding_cccd');
+            if ($request->hasFile('holding')) {
+                $file = $request->file('holding');
                 $filename = time() . '_holding_' . $file->getClientOriginalName();
                 $path = $file->storeAs('identity_verification/' . $user->id, $filename, 'public');
                 $user->holding_cccd = 'storage/' . $path;
