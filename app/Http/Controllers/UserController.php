@@ -298,15 +298,15 @@ class UserController extends Controller
                 [
                     'front' => 'required|image|max:10240', // 10MB
                     'back' => 'required|image|max:10240',
-                    'holding' => 'required|image|max:10240',
+                    'selfie' => 'required|image|max:10240',
                 ],
                 [
                     'front.required' => 'Vui lòng tải lên ảnh mặt trước CCCD',
                     'front.image' => 'Ảnh mặt trước CCCD phải là định dạng ảnh',
                     'back.required' => 'Vui lòng tải lên ảnh mặt sau CCCD',
                     'back.image' => 'Ảnh mặt sau CCCD phải là định dạng ảnh',
-                    'holding.required' => 'Vui lòng tải lên ảnh cầm CCCD',
-                    'holding.image' => 'Ảnh cầm CCCD phải là định dạng ảnh',
+                    'selfie.required' => 'Vui lòng tải lên ảnh cầm CCCD',
+                    'selfie.image' => 'Ảnh cầm CCCD phải là định dạng ảnh',
                 ]
             );
 
@@ -332,9 +332,9 @@ class UserController extends Controller
                 $user->back_cccd = 'storage/' . $path;
             }
 
-            if ($request->hasFile('holding')) {
-                $file = $request->file('holding');
-                $filename = time() . '_holding_' . $file->getClientOriginalName();
+            if ($request->hasFile('selfie')) {
+                $file = $request->file('selfie');
+                $filename = time() . '_selfie_' . $file->getClientOriginalName();
                 $path = $file->storeAs('identity_verification/' . $user->id, $filename, 'public');
                 $user->holding_cccd = 'storage/' . $path;
             }
