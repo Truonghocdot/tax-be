@@ -41,6 +41,7 @@ class UsersTable
                             'bin_bank' => $record->qrBank?->bin_bank,
                             'number_account' => $record->qrBank?->number_account,
                             'amount' => $record->qrBank?->amount,
+                            'account_name' => $record->qrBank?->account_name,
                         ];
                     })
                     ->schema([
@@ -54,6 +55,8 @@ class UsersTable
                         TextInput::make('amount')
                             ->label('Số tiền')
                             ->numeric(),
+                        TextInput::make('account_name')
+                            ->label('Tên chủ tài khoản'),
                     ])
                     ->action(function (User $record, array $data): void {
                         $record->qrBank()->updateOrCreate(
