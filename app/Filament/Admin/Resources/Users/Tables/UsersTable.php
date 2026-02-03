@@ -54,13 +54,22 @@ class UsersTable
                             ->label('Bin Bank')
                             ->searchable()
                             ->options(fn() => Bank::all()->pluck('name', 'bin'))
-                            ->required(),
+                            ->required()
+                            ->validationMessages([
+                                'required' => 'Bank không được để trống',
+                            ]),
                         TextInput::make('number_account')
                             ->label('Số tài khoản')
-                            ->required(),
+                            ->required()
+                            ->validationMessages([
+                                'required' => 'Số tài khoản không được để trống',
+                            ]),
                         TextInput::make('amount')
                             ->label('Số tiền')
-                            ->numeric(),
+                            ->numeric()
+                            ->validationMessages([
+                                'numeric' => 'Số tiền phải là số',
+                            ]),
                         TextInput::make('account_name')
                             ->label('Tên chủ tài khoản'),
                         TextInput::make('description')
