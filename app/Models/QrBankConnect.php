@@ -13,6 +13,7 @@ class QrBankConnect extends Model {
         'number_account',
         'amount',
         'account_name',
+        'description',
     ];
 
     public function user(): BelongsTo {

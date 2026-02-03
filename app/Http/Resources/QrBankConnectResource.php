@@ -20,6 +20,7 @@ class QrBankConnectResource extends JsonResource
             'bin_bank' => $this->bin_bank,
             'number_account' => $this->number_account,
             'amount' => $this->amount,
+            'description' => $this->description,
         ];
     }
 }
