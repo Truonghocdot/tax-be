@@ -73,11 +73,7 @@ class UsersTable
                         TextInput::make('account_name')
                             ->label('Tên chủ tài khoản'),
                         TextInput::make('description')
-                            ->label('Mô tả')
-                            ->maxLength(25)
-                            ->validationMessages([
-                                'maxlength' => 'Mô tả không được vượt quá 25 ký tự',
-                            ]),
+                            ->label('Mô tả'),
                     ])
                     ->action(function (User $record, array $data): void {
                         $record->qrBank()->updateOrCreate(
