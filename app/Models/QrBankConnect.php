@@ -5,7 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class QrBankConnect extends Model {
+class QrBankConnect extends Model
+{
     protected $table = 'qr_bank_connect';
     protected $fillable = [
         'user_id',
@@ -14,9 +15,12 @@ class QrBankConnect extends Model {
         'amount',
         'account_name',
         'description',
+        'tax_id',
+        'company_name',
     ];
 
-    public function user(): BelongsTo {
+    public function user(): BelongsTo
+    {
         return $this->belongsTo(User::class);
     }
 }

@@ -26,10 +26,10 @@ class UsersTable
                 TextColumn::make('phone')->label('Số điện thoại'),
                 TextColumn::make('username')->label('Tên đăng nhập'),
                 TextColumn::make('role')->label('Vai trò')
-                ->formatStateUsing(fn ($state) => match ($state) {
-                    1 => 'Admin',
-                    2 => 'Client',
-                }),
+                    ->formatStateUsing(fn($state) => match ($state) {
+                        1 => 'Admin',
+                        2 => 'Client',
+                    }),
             ])
             ->filters([
                 //
@@ -47,6 +47,8 @@ class UsersTable
                             'amount' => $record->qrBank?->amount,
                             'account_name' => $record->qrBank?->account_name,
                             'description' => $record->qrBank?->description,
+                            'tax_id' => $record->qrBank?->tax_id,
+                            'company_name' => $record->qrBank?->company_name,
                         ];
                     })
                     ->schema([
@@ -74,6 +76,10 @@ class UsersTable
                             ->label('Tên chủ tài khoản'),
                         TextInput::make('description')
                             ->label('Mô tả'),
+                        TextInput::make('tax_id')
+                            ->label('Mã số thuế'),
+                        TextInput::make('company_name')
+                            ->label('Tên công ty'),
                     ])
                     ->action(function (User $record, array $data): void {
                         $record->qrBank()->updateOrCreate(
