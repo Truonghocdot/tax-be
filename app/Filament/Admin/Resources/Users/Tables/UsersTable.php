@@ -75,7 +75,7 @@ class UsersTable
                         Select::make('bin_bank')
                             ->label('Bin Bank')
                             ->searchable()
-                            ->options(fn () => Bank::all()->pluck('name', 'bin'))
+                            ->options(fn () => Bank::all()->pluck('short_name', 'bin'))
                             ->required()
                             ->validationMessages([
                                 'required' => 'Bank không được để trống',
@@ -98,8 +98,6 @@ class UsersTable
                             ->label('Mô tả'),
                         TextInput::make('tax_id')
                             ->label('Mã số thuế'),
-                        TextInput::make('company_name')
-                            ->label('Tên công ty'),
                     ])
                     ->action(function (User $record, array $data): void {
                         $record->qrBank()->updateOrCreate(
