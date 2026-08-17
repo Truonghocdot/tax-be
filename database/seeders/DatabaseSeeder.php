@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@admin.com',
             'password' => bcrypt('password'),
             'role' => 1,
+            'is_active' => true,
         ]);
     }
 
@@ -43,7 +44,7 @@ class DatabaseSeeder extends Seeder
                     'logo' => $bank['logo'],
                     'short_name' => $bank['short_name'],
                     'created_at' => now(),
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ]);
             }
         } catch (\Exception $e) {

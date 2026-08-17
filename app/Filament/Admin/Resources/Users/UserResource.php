@@ -13,6 +13,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
+use Illuminate\Database\Eloquent\Model;
 
 class UserResource extends Resource
 {
@@ -40,6 +42,15 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return UsersTable::configure($table);
+    }
+
+    public static function getDeleteAuthorizationResponse(Model $record): Response
+    {
+        if ($record instanceof User && $record->isAdmin()) {
+            return Response::deny('Không thể xóa tài khoản quản trị viên.');
+        }
+
+        return parent::getDeleteAuthorizationResponse($record);
     }
 
     public static function getRelations(): array

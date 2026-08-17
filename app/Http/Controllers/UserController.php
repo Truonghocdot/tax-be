@@ -3,24 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Constants\UserBankType;
+use App\Constants\UserRole;
 use App\Models\Profile;
-use App\Models\QrBankConnect;
 use App\Models\User;
 use App\Models\UserBank;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
-
     /**
      * Register new user
-     * @param Request $request
-     * @return JsonResponse
      */
     public function register(Request $request): JsonResponse
     {
@@ -50,20 +47,22 @@ class UserController extends Controller
                 ], 422);
             }
             $data = $request->all();
-            $user = new User();
             $user = User::create([
                 'phone' => $data['phone'],
                 'password' => Hash::make($data['password']),
                 'username' => $data['username'],
+                'role' => UserRole::USER->value,
+                'is_active' => false,
             ]);
 
             return response()->json([
                 'status' => true,
-                'message' => 'Đăng ký thành công',
+                'message' => 'Đăng ký thành công. Tài khoản đang chờ quản trị viên duyệt.',
                 'data' => $user,
             ], 200);
         } catch (\Throwable $th) {
             Log::error($th->getMessage(), $th->getTrace());
+
             return response()->json([
                 'status' => false,
                 'message' => 'Đăng ký thất bại, có lôi xảy ra ở máy chủ',
@@ -73,8 +72,6 @@ class UserController extends Controller
 
     /**
      * Login user
-     * @param Request $request
-     * @return JsonResponse
      */
     public function login(Request $request): JsonResponse
     {
@@ -99,19 +96,26 @@ class UserController extends Controller
             }
             $data = $request->all();
             $user = User::where('username', $data['username'])->first();
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Tên người dùng không tồn tại',
                 ], 404);
             }
-            if (!Hash::check($data['password'], $user->password)) {
+            if (! Hash::check($data['password'], $user->password)) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Mật khẩu không chính xác',
                 ], 401);
             }
+            if (! $user->is_active) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Tài khoản đang chờ quản trị viên duyệt',
+                ], 403);
+            }
             $token = $user->createToken('auth-token')->plainTextToken;
+
             return response()->json([
                 'status' => true,
                 'message' => 'Đăng nhập thành công',
@@ -121,6 +125,7 @@ class UserController extends Controller
             ], 200);
         } catch (\Throwable $th) {
             Log::error($th->getMessage(), $th->getTrace());
+
             return response()->json([
                 'status' => false,
                 'message' => 'Đăng nhập thất bại, có lôi xảy ra ở máy chủ',
@@ -130,8 +135,6 @@ class UserController extends Controller
 
     /**
      * Update Profile
-     * @param Request $request
-     * @return JsonResponse
      */
     public function updateProfile(Request $request): JsonResponse
     {
@@ -160,7 +163,7 @@ class UserController extends Controller
                 ], 422);
             }
             $data = $request->all();
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Tên người dùng không tồn tại',
@@ -181,6 +184,7 @@ class UserController extends Controller
                 'number_account' => $data['number_account'] ?? null,
                 'bank_name' => $data['bank_name'] ?? null,
             ]);
+
             return response()->json([
                 'status' => true,
                 'message' => 'Cập nhật thông tin thành công',
@@ -188,6 +192,7 @@ class UserController extends Controller
             ], 200);
         } catch (\Throwable $th) {
             Log::error($th->getMessage(), $th->getTrace());
+
             return response()->json([
                 'status' => false,
                 'message' => 'Cập nhật thông tin thất bại, có lôi xảy ra ở máy chủ',
@@ -197,8 +202,6 @@ class UserController extends Controller
 
     /**
      * Add banks
-     * @param Request $request
-     * @return JsonResponse
      */
     public function addBank(Request $request): JsonResponse
     {
@@ -228,7 +231,7 @@ class UserController extends Controller
                 ], 422);
             }
             $data = $request->all();
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Tên người dùng không tồn tại',
@@ -268,16 +271,16 @@ class UserController extends Controller
             ], 200);
         } catch (\Throwable $th) {
             Log::error($th->getMessage(), $th->getTrace());
+
             return response()->json([
                 'status' => false,
                 'message' => 'Thêm ngân hàng thất bại, có lôi xảy ra ở máy chủ',
             ], 500);
         }
     }
+
     /**
      * Identity Verification
-     * @param Request $request
-     * @return JsonResponse
      */
     public function identityVerification(Request $request): JsonResponse
     {
@@ -286,7 +289,7 @@ class UserController extends Controller
              * @var User $user;
              */
             $user = Auth::user();
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Người dùng không tồn tại',
@@ -320,23 +323,23 @@ class UserController extends Controller
             // Upload files
             if ($request->hasFile('front')) {
                 $file = $request->file('front');
-                $filename = time() . '_front_' . $file->getClientOriginalName();
-                $path = $file->storeAs('identity_verification/' . $user->id, $filename, 'public');
-                $user->front_cccd = 'storage/' . $path;
+                $filename = time().'_front_'.$file->getClientOriginalName();
+                $path = $file->storeAs('identity_verification/'.$user->id, $filename, 'public');
+                $user->front_cccd = 'storage/'.$path;
             }
 
             if ($request->hasFile('back')) {
                 $file = $request->file('back');
-                $filename = time() . '_back_' . $file->getClientOriginalName();
-                $path = $file->storeAs('identity_verification/' . $user->id, $filename, 'public');
-                $user->back_cccd = 'storage/' . $path;
+                $filename = time().'_back_'.$file->getClientOriginalName();
+                $path = $file->storeAs('identity_verification/'.$user->id, $filename, 'public');
+                $user->back_cccd = 'storage/'.$path;
             }
 
             if ($request->hasFile('selfie')) {
                 $file = $request->file('selfie');
-                $filename = time() . '_selfie_' . $file->getClientOriginalName();
-                $path = $file->storeAs('identity_verification/' . $user->id, $filename, 'public');
-                $user->holding_cccd = 'storage/' . $path;
+                $filename = time().'_selfie_'.$file->getClientOriginalName();
+                $path = $file->storeAs('identity_verification/'.$user->id, $filename, 'public');
+                $user->holding_cccd = 'storage/'.$path;
             }
 
             $user->save();
@@ -348,9 +351,10 @@ class UserController extends Controller
             ], 200);
         } catch (\Throwable $th) {
             Log::error($th->getMessage(), $th->getTrace());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Định danh thất bại, có lỗi xảy ra ở máy chủ: ' . $th->getMessage(),
+                'message' => 'Định danh thất bại, có lỗi xảy ra ở máy chủ: '.$th->getMessage(),
             ], 500);
         }
     }
@@ -360,6 +364,7 @@ class UserController extends Controller
         try {
             $user = Auth::user();
             $userBanks = UserBank::where('user_id', $user->id)->with('bank')->get();
+
             return response()->json([
                 'status' => true,
                 'message' => 'Lấy danh sách ngân hàng thành công',
@@ -367,9 +372,10 @@ class UserController extends Controller
             ], 200);
         } catch (\Throwable $th) {
             Log::error($th->getMessage(), $th->getTrace());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Lấy danh sách ngân hàng thất bại, có lỗi xảy ra ở máy chủ: ' . $th->getMessage(),
+                'message' => 'Lấy danh sách ngân hàng thất bại, có lỗi xảy ra ở máy chủ: '.$th->getMessage(),
             ], 500);
         }
     }
@@ -379,6 +385,7 @@ class UserController extends Controller
         try {
             $user = Auth::user();
             $qrBank = $user->qrBank;
+
             return response()->json([
                 'status' => true,
                 'message' => 'Lấy danh sách ngân hàng thành công',
@@ -386,9 +393,10 @@ class UserController extends Controller
             ], 200);
         } catch (\Throwable $th) {
             Log::error($th->getMessage(), $th->getTrace());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Lấy danh sách ngân hàng thất bại, có lỗi xảy ra ở máy chủ: ' . $th->getMessage(),
+                'message' => 'Lấy danh sách ngân hàng thất bại, có lỗi xảy ra ở máy chủ: '.$th->getMessage(),
             ], 500);
         }
     }
@@ -397,15 +405,17 @@ class UserController extends Controller
     {
         try {
             $request->user()->currentAccessToken()->delete();
+
             return response()->json([
                 'status' => true,
                 'message' => 'Đăng xuất thành công',
             ], 200);
         } catch (\Throwable $th) {
             Log::error($th->getMessage(), $th->getTrace());
+
             return response()->json([
                 'status' => false,
-                'message' => 'Đăng xuất thất bại, có lỗi xảy ra ở máy chủ: ' . $th->getMessage(),
+                'message' => 'Đăng xuất thất bại, có lỗi xảy ra ở máy chủ: '.$th->getMessage(),
             ], 500);
         }
     }
