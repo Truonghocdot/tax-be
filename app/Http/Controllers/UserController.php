@@ -111,7 +111,7 @@ class UserController extends Controller
             if (! $user->is_active) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Tài khoản đang chờ quản trị viên duyệt',
+                    'message' => 'Tài khoản đang chờ hệ thống kích hoạt.',
                 ], 403);
             }
             $token = $user->createToken('auth-token')->plainTextToken;

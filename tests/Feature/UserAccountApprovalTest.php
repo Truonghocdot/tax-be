@@ -45,7 +45,7 @@ test('an inactive user cannot log in', function () {
         ->assertForbidden()
         ->assertJson([
             'status' => false,
-            'message' => 'Tài khoản đang chờ quản trị viên duyệt',
+            'message' => 'Tài khoản đang chờ hệ thống kích hoạt.',
         ]);
 
     $this->assertDatabaseCount('personal_access_tokens', 0);
